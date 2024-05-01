@@ -1,6 +1,7 @@
-import { ChangeEvent, FormEvent, useCallback, useMemo, useState } from 'react';
+import { ChangeEvent, FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import posthog from 'posthog-js';
 import { makeSearchData } from '../../helpers/searchData';
-import { useSearchParams } from 'react-router-dom';
+import { useLocation, useSearchParams } from 'react-router-dom';
 import { Button, TextField, Typography } from '@mui/material';
 import styled from '@emotion/styled';
 
@@ -70,6 +71,7 @@ const Divider = styled.div`
 `;
 
 const Search = () => {
+  const { pathname, search } = useLocation();
   const [searchParams, setSeachParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState(() => searchParams.get('search') || '');
 
@@ -93,18 +95,33 @@ const Search = () => {
     [handleSubmitSearch]
   );
 
+  const rawData = useMemo(() => makeSearchData(), []);
+
   const data = useMemo(
     () =>
-      makeSearchData().filter(item => {
-        const search = searchTerm.toLowerCase();
+      rawData.filter(item => {
+        const lowercaseSearch = searchTerm.toLowerCase();
         return (
-          item.id.includes(search) ||
-          item.name.toLowerCase().includes(search) ||
-          item.text?.toLowerCase().includes(search)
+          item.id.includes(lowercaseSearch) ||
+          item.name.toLowerCase().includes(lowercaseSearch) ||
+          item.text?.toLowerCase().includes(lowercaseSearch)
         );
       }),
-    [searchTerm]
+    [rawData, searchTerm]
   );
+
+  useEffect(() => {
+    if (data) {
+      if (data.length > 0) {
+        posthog.capture(data.length > 0 ? 'valid_results' : 'no_results', {
+          url: `${pathname}${search}`,
+          ids: data.map(item => item.id).join(', '),
+        });
+      } else {
+        posthog.capture('no_results', { url: `${pathname}${search}` });
+      }
+    }
+  }, [data, pathname, search]);
 
   return (
     <Container>
@@ -134,7 +151,16 @@ const Search = () => {
                     <Typography>C: {item.propertyC ? 'Yes' : 'No'}</Typography>
                   </Row>
                 </Row>
-                <Button onClick={() => alert('click')} variant='contained'>
+                <Button
+                  onClick={() =>
+                    posthog.capture('contact-PI', {
+                      id: item.id,
+                      position: i,
+                      url: `${pathname}${search}`,
+                    })
+                  }
+                  variant='contained'
+                >
                   Action
                 </Button>
               </ResultRow>
