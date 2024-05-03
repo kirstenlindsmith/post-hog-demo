@@ -144,29 +144,71 @@ const Search = () => {
             <Result key={item.id}>
               <ResultRow>
                 <Row style={{ gap: '1.25rem' }}>
-                  <Number>{i}</Number>
+                  <Number>{i + 1}</Number>
                   <Row>
                     <Typography>A: {item.propertyA ? 'Yes' : 'No'}</Typography>
                     <Typography>B: {item.propertyB ? 'Yes' : 'No'}</Typography>
                     <Typography>C: {item.propertyC ? 'Yes' : 'No'}</Typography>
                   </Row>
                 </Row>
-                <Button
-                  onClick={() =>
-                    posthog.capture('contact-PI', {
-                      id: item.id,
-                      position: i,
-                      url: `${pathname}${search}`,
-                    })
-                  }
-                  variant='contained'
-                >
-                  Action
-                </Button>
               </ResultRow>
               <Typography>{item.name}</Typography>
               <Divider />
               <Typography>{item.text}</Typography>
+              <Row style={{ marginTop: '1.5rem', width: '100%', justifyContent: 'flex-end' }}>
+                <Button
+                  onClick={() => {
+                    posthog.capture('contact-PI', {
+                      id: item.id,
+                      position: i + 1,
+                      url: `${pathname}${search}`,
+                    });
+                    alert('contacted PI');
+                  }}
+                  variant='contained'
+                >
+                  Contact PI
+                </Button>
+                <Button
+                  onClick={() => {
+                    posthog.capture('view-sites', {
+                      id: item.id,
+                      position: i + 1,
+                      url: `${pathname}${search}`,
+                    });
+                    alert('viewed sites');
+                  }}
+                  variant='contained'
+                >
+                  View sites
+                </Button>
+                <Button
+                  onClick={() => {
+                    posthog.capture('request-slot-availability', {
+                      id: item.id,
+                      position: i + 1,
+                      url: `${pathname}${search}`,
+                    });
+                    alert('requested slot availability');
+                  }}
+                  variant='contained'
+                >
+                  Request slot availability
+                </Button>
+                <Button
+                  onClick={() => {
+                    posthog.capture('refer-patient', {
+                      id: item.id,
+                      position: i + 1,
+                      url: `${pathname}${search}`,
+                    });
+                    alert('referred patient');
+                  }}
+                  variant='contained'
+                >
+                  Refer patient
+                </Button>
+              </Row>
             </Result>
           ))
         ) : (
